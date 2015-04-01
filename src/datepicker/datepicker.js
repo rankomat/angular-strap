@@ -112,6 +112,18 @@ angular.module('mgcrea.ngStrap.datepicker', [
           }
         };
 
+        $datepicker.rebuildViews = function() {
+          var newPickerViews = datepickerViews($datepicker);
+          if(!angular.equals(newPickerViews.viewDate, viewDate)) {
+            pickerViews = newPickerViews;
+            $datepicker.$views = pickerViews.views;
+            viewDate = pickerViews.viewDate;
+            $picker = $datepicker.$views[scope.$mode];
+            options = $datepicker.$options;
+            $datepicker.$build();
+          }
+        };
+
         $datepicker.setMode = function(mode) {
           // console.warn('$datepicker.setMode', mode);
           scope.$mode = mode;
@@ -308,6 +320,12 @@ angular.module('mgcrea.ngStrap.datepicker', [
             !isNaN(datepicker.$options[key]) && datepicker.$build(false);
             validateAgainstMinMaxDate(controller.$dateValue);
           });
+        });
+
+        // [Marek Lewandowski] rebuilding datepicker view after update of startDate attribute.
+        angular.isDefined(attr.startDate) && attr.$observe('startDate', function(newStartDate){
+          datepicker.$options.startDate = newStartDate;
+          datepicker.rebuildViews();
         });
 
         // Watch model for changes
