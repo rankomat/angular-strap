@@ -329,8 +329,8 @@ angular.module('mgcrea.ngStrap.datepicker', [
           });
         });
 
+        // [Marek Lewandowski] rebuilding datepicker view after update of startDate attribute.
         angular.isDefined(attr.startDate) && attr.$observe('startDate', function(newStartDate){
-          console.warn('Rebuilding view');
           datepicker.$options.startDate = newStartDate;
           datepicker.rebuildViews();
         });

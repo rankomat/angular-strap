@@ -363,6 +363,12 @@ angular.module('mgcrea.ngStrap.datepicker', [
           if(isValid) controller.$dateValue = parsedDate;
         }
 
+        // [Marek Lewandowski] Customization. Updates input's text value with datepickers's model.
+        controller.$parsers.unshift(function(viewValue) {
+          controller.$render();
+          return viewValue;
+        });
+
         // viewValue -> $parsers -> modelValue
         controller.$parsers.unshift(function(viewValue) {
           // console.warn('$parser("%s"): viewValue=%o', element.attr('ng-model'), viewValue);
