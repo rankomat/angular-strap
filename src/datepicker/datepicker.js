@@ -112,6 +112,18 @@ angular.module('mgcrea.ngStrap.datepicker', [
           }
         };
 
+        $datepicker.rebuildViews = function() {
+          var newPickerViews = datepickerViews($datepicker);
+          if(!angular.equals(newPickerViews.viewDate, viewDate)) {
+            pickerViews = newPickerViews;
+            $datepicker.$views = pickerViews.views;
+            viewDate = pickerViews.viewDate;
+            $picker = $datepicker.$views[scope.$mode];
+            options = $datepicker.$options;
+            $datepicker.$build();
+          }
+        };
+
         $datepicker.setMode = function(mode) {
           // console.warn('$datepicker.setMode', mode);
           scope.$mode = mode;
@@ -310,6 +322,12 @@ angular.module('mgcrea.ngStrap.datepicker', [
           });
         });
 
+        // [Marek Lewandowski] rebuilding datepicker view after update of startDate attribute.
+        angular.isDefined(attr.startDate) && attr.$observe('startDate', function(newStartDate){
+          datepicker.$options.startDate = newStartDate;
+          datepicker.rebuildViews();
+        });
+
         // Watch model for changes
         scope.$watch(attr.ngModel, function(newValue, oldValue) {
           datepicker.update(controller.$dateValue);
@@ -344,6 +362,12 @@ angular.module('mgcrea.ngStrap.datepicker', [
           // Only update the model when we have a valid date
           if(isValid) controller.$dateValue = parsedDate;
         }
+
+        // [Marek Lewandowski] Customization. Updates input's text value with datepickers's model.
+        controller.$parsers.unshift(function(viewValue) {
+          controller.$render();
+          return viewValue;
+        });
 
         // viewValue -> $parsers -> modelValue
         controller.$parsers.unshift(function(viewValue) {

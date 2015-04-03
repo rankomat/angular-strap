@@ -1,6 +1,6 @@
 /**
  * angular-strap
- * @version v2.2.1 - 2015-03-10
+ * @version v2.2.1 - 2015-04-01
  * @link http://mgcrea.github.io/angular-strap
  * @author Olivier Louvignes (olivier@mg-crea.com)
  * @license MIT License, http://www.opensource.org/licenses/MIT
@@ -26,6 +26,13 @@ angular.module('mgcrea.ngStrap.collapse', [])
       self.$options = angular.copy(defaults);
       angular.forEach(['animation', 'disallowToggle', 'activeClass', 'startCollapsed', 'allowMultiple'], function (key) {
         if(angular.isDefined($attrs[key])) self.$options[key] = $attrs[key];
+      });
+
+      // use string regex match boolean attr falsy values, leave truthy values be
+      var falseValueRegExp = /^(false|0|)$/i;
+      angular.forEach(['disallowToggle', 'startCollapsed', 'allowMultiple'], function(key) {
+        if(angular.isDefined($attrs[key]) && falseValueRegExp.test($attrs[key]))
+          self.$options[key] = false;
       });
 
       self.$toggles = [];

@@ -1,6 +1,6 @@
 /**
  * angular-strap
- * @version v2.2.1 - 2015-03-10
+ * @version v2.2.1 - 2015-04-01
  * @link http://mgcrea.github.io/angular-strap
  * @author Olivier Louvignes (olivier@mg-crea.com)
  * @license MIT License, http://www.opensource.org/licenses/MIT
@@ -285,95 +285,6 @@ angular.module('mgcrea.ngStrap.affix', ['mgcrea.ngStrap.helpers.dimensions', 'mg
     };
   });
 
-// Source: aside.js
-angular.module('mgcrea.ngStrap.aside', ['mgcrea.ngStrap.modal'])
-
-  .provider('$aside', function() {
-
-    var defaults = this.defaults = {
-      animation: 'am-fade-and-slide-right',
-      prefixClass: 'aside',
-      prefixEvent: 'aside',
-      placement: 'right',
-      template: 'aside/aside.tpl.html',
-      contentTemplate: false,
-      container: false,
-      element: null,
-      backdrop: true,
-      keyboard: true,
-      html: false,
-      show: true
-    };
-
-    this.$get = ["$modal", function($modal) {
-
-      function AsideFactory(config) {
-
-        var $aside = {};
-
-        // Common vars
-        var options = angular.extend({}, defaults, config);
-
-        $aside = $modal(options);
-
-        return $aside;
-
-      }
-
-      return AsideFactory;
-
-    }];
-
-  })
-
-  .directive('bsAside', ["$window", "$sce", "$aside", function($window, $sce, $aside) {
-
-    var requestAnimationFrame = $window.requestAnimationFrame || $window.setTimeout;
-
-    return {
-      restrict: 'EAC',
-      scope: true,
-      link: function postLink(scope, element, attr, transclusion) {
-        // Directive options
-        var options = {scope: scope, element: element, show: false};
-        angular.forEach(['template', 'contentTemplate', 'placement', 'backdrop', 'keyboard', 'html', 'container', 'animation'], function(key) {
-          if(angular.isDefined(attr[key])) options[key] = attr[key];
-        });
-
-        // Support scope as data-attrs
-        angular.forEach(['title', 'content'], function(key) {
-          attr[key] && attr.$observe(key, function(newValue, oldValue) {
-            scope[key] = $sce.trustAsHtml(newValue);
-          });
-        });
-
-        // Support scope as an object
-        attr.bsAside && scope.$watch(attr.bsAside, function(newValue, oldValue) {
-          if(angular.isObject(newValue)) {
-            angular.extend(scope, newValue);
-          } else {
-            scope.content = newValue;
-          }
-        }, true);
-
-        // Initialize aside
-        var aside = $aside(options);
-
-        // Trigger
-        element.on(attr.trigger || 'click', aside.toggle);
-
-        // Garbage collection
-        scope.$on('$destroy', function() {
-          if (aside) aside.destroy();
-          options = null;
-          aside = null;
-        });
-
-      }
-    };
-
-  }]);
-
 // Source: alert.js
 // @BUG: following snippet won't compile correctly
 // @TODO: submit issue to core
@@ -453,6 +364,13 @@ angular.module('mgcrea.ngStrap.alert', ['mgcrea.ngStrap.modal'])
           if(angular.isDefined(attr[key])) options[key] = attr[key];
         });
 
+        // use string regex match boolean attr falsy values, leave truthy values be
+        var falseValueRegExp = /^(false|0|)$/i;
+        angular.forEach(['keyboard', 'html', 'container', 'dismissable'], function(key) {
+          if(angular.isDefined(attr[key]) && falseValueRegExp.test(attr[key]))
+            options[key] = false;
+        });
+
         // overwrite inherited title value when no value specified
         // fix for angular 1.3.1 531a8de72c439d8ddd064874bf364c00cedabb11
         if (!scope.hasOwnProperty('title')){
@@ -486,6 +404,102 @@ angular.module('mgcrea.ngStrap.alert', ['mgcrea.ngStrap.modal'])
           if (alert) alert.destroy();
           options = null;
           alert = null;
+        });
+
+      }
+    };
+
+  }]);
+
+// Source: aside.js
+angular.module('mgcrea.ngStrap.aside', ['mgcrea.ngStrap.modal'])
+
+  .provider('$aside', function() {
+
+    var defaults = this.defaults = {
+      animation: 'am-fade-and-slide-right',
+      prefixClass: 'aside',
+      prefixEvent: 'aside',
+      placement: 'right',
+      template: 'aside/aside.tpl.html',
+      contentTemplate: false,
+      container: false,
+      element: null,
+      backdrop: true,
+      keyboard: true,
+      html: false,
+      show: true
+    };
+
+    this.$get = ["$modal", function($modal) {
+
+      function AsideFactory(config) {
+
+        var $aside = {};
+
+        // Common vars
+        var options = angular.extend({}, defaults, config);
+
+        $aside = $modal(options);
+
+        return $aside;
+
+      }
+
+      return AsideFactory;
+
+    }];
+
+  })
+
+  .directive('bsAside', ["$window", "$sce", "$aside", function($window, $sce, $aside) {
+
+    var requestAnimationFrame = $window.requestAnimationFrame || $window.setTimeout;
+
+    return {
+      restrict: 'EAC',
+      scope: true,
+      link: function postLink(scope, element, attr, transclusion) {
+        // Directive options
+        var options = {scope: scope, element: element, show: false};
+        angular.forEach(['template', 'contentTemplate', 'placement', 'backdrop', 'keyboard', 'html', 'container', 'animation'], function(key) {
+          if(angular.isDefined(attr[key])) options[key] = attr[key];
+        });
+
+        // use string regex match boolean attr falsy values, leave truthy values be
+        var falseValueRegExp = /^(false|0|)$/i;
+        angular.forEach(['backdrop', 'keyboard', 'html', 'container'], function(key) {
+          if(angular.isDefined(attr[key]) && falseValueRegExp.test(attr[key]))
+            options[key] = false;
+        });
+
+        // Support scope as data-attrs
+        angular.forEach(['title', 'content'], function(key) {
+          attr[key] && attr.$observe(key, function(newValue, oldValue) {
+            scope[key] = $sce.trustAsHtml(newValue);
+          });
+        });
+
+        // Support scope as an object
+        attr.bsAside && scope.$watch(attr.bsAside, function(newValue, oldValue) {
+          if(angular.isObject(newValue)) {
+            angular.extend(scope, newValue);
+          } else {
+            scope.content = newValue;
+          }
+        }, true);
+
+        // Initialize aside
+        var aside = $aside(options);
+
+        // Trigger
+        element.on(attr.trigger || 'click', aside.toggle);
+
+        // Garbage collection
+        scope.$on('$destroy', function() {
+          if (aside) aside.destroy();
+          options = null;
+          aside = null;
         });
 
       }
@@ -687,6 +701,13 @@ angular.module('mgcrea.ngStrap.collapse', [])
       self.$options = angular.copy(defaults);
       angular.forEach(['animation', 'disallowToggle', 'activeClass', 'startCollapsed', 'allowMultiple'], function (key) {
         if(angular.isDefined($attrs[key])) self.$options[key] = $attrs[key];
+      });
+
+      // use string regex match boolean attr falsy values, leave truthy values be
+      var falseValueRegExp = /^(false|0|)$/i;
+      angular.forEach(['disallowToggle', 'startCollapsed', 'allowMultiple'], function(key) {
+        if(angular.isDefined($attrs[key]) && falseValueRegExp.test($attrs[key]))
+          self.$options[key] = false;
       });
 
       self.$toggles = [];
@@ -1046,6 +1067,18 @@ angular.module('mgcrea.ngStrap.datepicker', [
           }
         };
 
+        $datepicker.rebuildViews = function() {
+          var newPickerViews = datepickerViews($datepicker);
+          if(!angular.equals(newPickerViews.viewDate, viewDate)) {
+            pickerViews = newPickerViews;
+            $datepicker.$views = pickerViews.views;
+            viewDate = pickerViews.viewDate;
+            $picker = $datepicker.$views[scope.$mode];
+            options = $datepicker.$options;
+            $datepicker.$build();
+          }
+        };
+
         $datepicker.setMode = function(mode) {
           // console.warn('$datepicker.setMode', mode);
           scope.$mode = mode;
@@ -1200,8 +1233,15 @@ angular.module('mgcrea.ngStrap.datepicker', [
 
         // Directive options
         var options = {scope: scope, controller: controller};
-        angular.forEach(['placement', 'container', 'delay', 'trigger', 'keyboard', 'html', 'animation', 'template', 'autoclose', 'dateType', 'dateFormat', 'timezone', 'modelDateFormat', 'dayFormat', 'strictFormat', 'startWeek', 'startDate', 'useNative', 'lang', 'startView', 'minView', 'iconLeft', 'iconRight', 'daysOfWeekDisabled', 'id'], function(key) {
+        angular.forEach(['placement', 'container', 'delay', 'trigger', 'html', 'animation', 'template', 'autoclose', 'dateType', 'dateFormat', 'timezone', 'modelDateFormat', 'dayFormat', 'strictFormat', 'startWeek', 'startDate', 'useNative', 'lang', 'startView', 'minView', 'iconLeft', 'iconRight', 'daysOfWeekDisabled', 'id'], function(key) {
           if(angular.isDefined(attr[key])) options[key] = attr[key];
+        });
+
+        // use string regex match boolean attr falsy values, leave truthy values be
+        var falseValueRegExp = /^(false|0|)$/i;
+        angular.forEach(['html', 'container', 'autoclose', 'useNative'], function(key) {
+          if(angular.isDefined(attr[key]) && falseValueRegExp.test(attr[key]))
+            options[key] = false;
         });
 
         // Visibility binding support
@@ -1235,6 +1275,12 @@ angular.module('mgcrea.ngStrap.datepicker', [
             !isNaN(datepicker.$options[key]) && datepicker.$build(false);
             validateAgainstMinMaxDate(controller.$dateValue);
           });
+        });
+
+        // [Marek Lewandowski] rebuilding datepicker view after update of startDate attribute.
+        angular.isDefined(attr.startDate) && attr.$observe('startDate', function(newStartDate){
+          datepicker.$options.startDate = newStartDate;
+          datepicker.rebuildViews();
         });
 
         // Watch model for changes
@@ -1687,6 +1733,13 @@ angular.module('mgcrea.ngStrap.dropdown', ['mgcrea.ngStrap.tooltip'])
           if(angular.isDefined(attr[key])) options[key] = attr[key];
         });
 
+        // use string regex match boolean attr falsy values, leave truthy values be
+        var falseValueRegExp = /^(false|0|)$/i;
+        angular.forEach(['html', 'container'], function(key) {
+          if(angular.isDefined(attr[key]) && falseValueRegExp.test(attr[key]))
+            options[key] = false;
+        });
+
         // Support scope as an object
         attr.bsDropdown && scope.$watch(attr.bsDropdown, function(newValue, oldValue) {
           scope.content = newValue;
@@ -1739,7 +1792,7 @@ angular.module('mgcrea.ngStrap.helpers.dateFormatter', [])
     };
 
     function splitTimeFormat(format) {
-      return /(h+)([:\.])?(m+)[ ]?(a?)/i.exec(format).slice(1);
+      return /(h+)([:\.])?(m+)([:\.])?(s*)[ ]?(a?)/i.exec(format).slice(1);
     }
 
     // h:mm a => h
@@ -1752,14 +1805,24 @@ angular.module('mgcrea.ngStrap.helpers.dateFormatter', [])
       return splitTimeFormat(timeFormat)[2];
     };
 
+    // h:mm:ss a => ss
+    this.secondsFormat = function(timeFormat) {
+      return splitTimeFormat(timeFormat)[4];
+    };
+
     // h:mm a => :
     this.timeSeparator = function(timeFormat) {
       return splitTimeFormat(timeFormat)[1];
     };
 
+    // h:mm:ss a => true, h:mm a => false
+    this.showSeconds = function(timeFormat) {
+      return !!splitTimeFormat(timeFormat)[4];
+    };
+
     // h:mm a => true, H.mm => false
     this.showAM = function(timeFormat) {
-      return !!splitTimeFormat(timeFormat)[3];
+      return !!splitTimeFormat(timeFormat)[5];
     };
 
     this.formatDate = function(date, format, lang, timezone){
@@ -2575,7 +2638,7 @@ angular.module('mgcrea.ngStrap.modal', ['mgcrea.ngStrap.helpers.dimensions'])
           } else {
             if (options.container) {
               parent = findElement(options.container);
-              after = parent[0].lastChild ? angular.element(parent[0].lastChild) : null;
+              after = parent[0] && parent[0].lastChild ? angular.element(parent[0].lastChild) : null;
             } else {
               parent = null;
               after = options.element;
@@ -2742,19 +2805,16 @@ angular.module('mgcrea.ngStrap.modal', ['mgcrea.ngStrap.helpers.dimensions'])
 
         // Directive options
         var options = {scope: scope, element: element, show: false};
-        angular.forEach(['template', 'contentTemplate', 'placement', 'container', 'animation', 'id'], function(key) {
+        angular.forEach(['template', 'contentTemplate', 'placement', 'backdrop', 'keyboard', 'html', 'container', 'animation', 'id'], function(key) {
           if(angular.isDefined(attr[key])) options[key] = attr[key];
         });
 
-        // use string regex match for boolean values
-        var falseValueRegExp = /^(false|0|)$/;
-        angular.forEach(['keyboard', 'html'], function(key) {
-          if(angular.isDefined(attr[key])) options[key] = !falseValueRegExp.test(attr[key]);
+        // use string regex match boolean attr falsy values, leave truthy values be
+        var falseValueRegExp = /^(false|0|)$/i;
+        angular.forEach(['backdrop', 'keyboard', 'html', 'container'], function(key) {
+          if(angular.isDefined(attr[key]) && falseValueRegExp.test(attr[key]))
+            options[key] = false;
         });
-
-        if(angular.isDefined(attr.backdrop)) {
-          options.backdrop = falseValueRegExp.test(attr.backdrop) ? false : attr.backdrop;
-        }
 
         // Support scope as data-attrs
         angular.forEach(['title', 'content'], function(key) {
@@ -2912,9 +2972,25 @@ angular.module('mgcrea.ngStrap.popover', ['mgcrea.ngStrap.tooltip'])
 
         // Directive options
         var options = {scope: scope};
-        angular.forEach(['template', 'contentTemplate', 'placement', 'container', 'target', 'delay', 'trigger', 'keyboard', 'html', 'animation', 'customClass', 'autoClose', 'id'], function(key) {
+        angular.forEach(['template', 'contentTemplate', 'placement', 'container', 'delay', 'trigger', 'html', 'animation', 'customClass', 'autoClose', 'id'], function(key) {
           if(angular.isDefined(attr[key])) options[key] = attr[key];
         });
+
+        // use string regex match boolean attr falsy values, leave truthy values be
+        var falseValueRegExp = /^(false|0|)$/i;
+        angular.forEach(['html', 'container', 'autoClose'], function(key) {
+          if(angular.isDefined(attr[key]) && falseValueRegExp.test(attr[key]))
+            options[key] = false;
+        });
+
+        // should not parse target attribute (anchor tag), only data-target #1454
+        var dataTarget = element.attr('data-target');
+        if(angular.isDefined(dataTarget)) {
+          if(falseValueRegExp.test(dataTarget))
+            options.target = false;
+          else
+            options.target = dataTarget;
+        }
 
         // Support scope as data-attrs
         angular.forEach(['title', 'content'], function(key) {
@@ -2944,7 +3020,7 @@ angular.module('mgcrea.ngStrap.popover', ['mgcrea.ngStrap.tooltip'])
           if(angular.isString(newValue)) newValue = !!newValue.match(/true|,?(popover),?/i);
           newValue === true ? popover.show() : popover.hide();
         });
-        
+
         // Viewport support
         attr.viewport && scope.$watch(attr.viewport, function (newValue) {
           if(!popover || !angular.isDefined(newValue)) return;
@@ -3261,10 +3337,6 @@ angular.module('mgcrea.ngStrap.select', ['mgcrea.ngStrap.tooltip', 'mgcrea.ngStr
         // Common vars
         var options = angular.extend({}, defaults, config);
 
-        // parse sort option value to support attribute as string
-        // when binded to interpolated value
-        options.sort = options.sort.toString().match(/true|1/i);
-
         $select = $tooltip(element, options);
         var scope = $select.$scope;
 
@@ -3447,7 +3519,7 @@ angular.module('mgcrea.ngStrap.select', ['mgcrea.ngStrap.tooltip', 'mgcrea.ngStr
         $select.hide = function() {
           if(!options.multiple && !controller.$modelValue) {
             scope.$activeIndex = -1;
-          } 
+          }
           $select.$element.off(isTouch ? 'touchstart' : 'mousedown', $select.$onMouseDown);
           if(options.keyboard) {
             element.off('keydown', $select.$onKeyDown);
@@ -3477,9 +3549,26 @@ angular.module('mgcrea.ngStrap.select', ['mgcrea.ngStrap.tooltip', 'mgcrea.ngStr
 
         // Directive options
         var options = {scope: scope, placeholder: defaults.placeholder};
-        angular.forEach(['placement', 'container', 'delay', 'trigger', 'keyboard', 'html', 'animation', 'template', 'placeholder', 'multiple', 'allNoneButtons', 'maxLength', 'maxLengthHtml', 'allText', 'noneText', 'iconCheckmark', 'autoClose', 'id', 'sort', 'caretHtml'], function(key) {
+        angular.forEach(['placement', 'container', 'delay', 'trigger', 'keyboard', 'html', 'animation', 'template', 'placeholder', 'allNoneButtons', 'maxLength', 'maxLengthHtml', 'allText', 'noneText', 'iconCheckmark', 'autoClose', 'id', 'sort', 'caretHtml'], function(key) {
           if(angular.isDefined(attr[key])) options[key] = attr[key];
         });
+
+        // use string regex match boolean attr falsy values, leave truthy values be
+        var falseValueRegExp = /^(false|0|)$/i;
+        angular.forEach(['html', 'container', 'allNoneButtons', 'sort'], function(key) {
+          if(angular.isDefined(attr[key]) && falseValueRegExp.test(attr[key]))
+            options[key] = false;
+        });
+
+        // Only parse data-multiple. Angular sets existence attributes to true (multiple/required/etc), they apply this
+        // to data-multiple as well for some reason, so we'll parse this ourselves and disregard multiple
+        var dataMultiple = element.attr('data-multiple');
+        if(angular.isDefined(dataMultiple)) {
+          if(falseValueRegExp.test(dataMultiple))
+            options.multiple = false;
+          else
+            options.multiple = dataMultiple;
+        }
 
         // Add support for select markup
         if(element[0].nodeName.toLowerCase() === 'select') {
@@ -3497,14 +3586,14 @@ angular.module('mgcrea.ngStrap.select', ['mgcrea.ngStrap.tooltip', 'mgcrea.ngStr
 
         // Watch bsOptions values before filtering for changes
         var watchedOptions = parsedOptions.$match[7].replace(/\|.+/, '').trim();
-        scope.$watch(watchedOptions, function(newValue, oldValue) {
+        scope.$watchCollection(watchedOptions, function(newValue, oldValue) {
           // console.warn('scope.$watch(%s)', watchedOptions, newValue, oldValue);
           parsedOptions.valuesFn(scope, controller)
           .then(function(values) {
             select.update(values);
             controller.$render();
           });
-        }, true);
+        });
 
         // Watch model for changes
         scope.$watch(attr.ngModel, function(newValue, oldValue) {
@@ -3579,8 +3668,8 @@ angular.module('mgcrea.ngStrap.tab', [])
 
       self.$panes = $scope.$panes = [];
 
-      // DEPRECATED: $viewChangeListeners, please use $activePaneChangeListeners
-      // Because we deprecated ngModel usage, we rename viewChangeListeners to 
+      // Please use $activePaneChangeListeners if you use `bsActivePane`
+      // Because we removed `ngModel` as default, we rename viewChangeListeners to
       // activePaneChangeListeners to make more sense.
       self.$activePaneChangeListeners = self.$viewChangeListeners = [];
 
@@ -3596,7 +3685,7 @@ angular.module('mgcrea.ngStrap.tab', [])
         self.$panes.splice(index, 1);
 
         if (index < activeIndex) {
-          // we removed a pane before the active pane, so we need to 
+          // we removed a pane before the active pane, so we need to
           // decrement the active pane index
           activeIndex--;
         }
@@ -3644,11 +3733,9 @@ angular.module('mgcrea.ngStrap.tab', [])
         var ngModelCtrl = controllers[0];
         var bsTabsCtrl = controllers[1];
 
-        // DEPRECATED: ngModel, please use bsActivePane
-        // 'ngModel' is deprecated bacause if interferes with form validation
-        // and status, so avoid using it here.
+        // 'ngModel' does interfere with form validation
+        // and status, use `bsActivePane` instead to avoid it
         if(ngModelCtrl) {
-          console.warn('Usage of ngModel is deprecated, please use bsActivePane instead!');
 
           // Update the modelValue following
           bsTabsCtrl.$activePaneChangeListeners.push(function() {
@@ -3765,6 +3852,7 @@ angular.module('mgcrea.ngStrap.timepicker', [
       length: 5,
       hourStep: 1,
       minuteStep: 5,
+      secondStep: 5,
       roundDisplay: false,
       iconUp: 'glyphicon glyphicon-chevron-up',
       iconDown: 'glyphicon glyphicon-chevron-down',
@@ -3809,6 +3897,8 @@ angular.module('mgcrea.ngStrap.timepicker', [
         var hoursFormat = $dateFormatter.hoursFormat(format),
           timeSeparator = $dateFormatter.timeSeparator(format),
           minutesFormat = $dateFormatter.minutesFormat(format),
+          secondsFormat = $dateFormatter.secondsFormat(format),
+          showSeconds = $dateFormatter.showSeconds(format),
           showAM = $dateFormatter.showAM(format);
 
         scope.$iconUp = options.iconUp;
@@ -3845,6 +3935,7 @@ angular.module('mgcrea.ngStrap.timepicker', [
           if(!angular.isDate(date)) date = new Date(date);
           if(index === 0) controller.$dateValue.setHours(date.getHours());
           else if(index === 1) controller.$dateValue.setMinutes(date.getMinutes());
+          else if(index === 2) controller.$dateValue.setSeconds(date.getSeconds());
           controller.$setViewValue(angular.copy(controller.$dateValue));
           controller.$render();
           if(options.autoclose && !keep) {
@@ -3877,12 +3968,22 @@ angular.module('mgcrea.ngStrap.timepicker', [
             minute = new Date(1970, 0, 1, 0, viewDate.minute - (midIndex - i) * options.minuteStep);
             minutes.push({date: minute, label: formatDate(minute, minutesFormat), selected: $timepicker.$date && $timepicker.$isSelected(minute, 1), disabled: $timepicker.$isDisabled(minute, 1)});
           }
+          var seconds = [], second;
+          for(i = 0; i < options.length; i++) {
+            second = new Date(1970, 0, 1, 0, 0, viewDate.second - (midIndex - i) * options.secondStep);
+            seconds.push({date: second, label: formatDate(second, secondsFormat), selected: $timepicker.$date && $timepicker.$isSelected(second, 2), disabled: $timepicker.$isDisabled(second, 2)});
+          }
 
           var rows = [];
           for(i = 0; i < options.length; i++) {
-            rows.push([hours[i], minutes[i]]);
+            if (showSeconds) {
+              rows.push([hours[i], minutes[i], seconds[i]]);
+            } else {
+              rows.push([hours[i], minutes[i]]);
+            }
           }
           scope.rows = rows;
+          scope.showSeconds = showSeconds;
           scope.showAM = showAM;
           scope.isAM = ($timepicker.$date || hours[midIndex].date).getHours() < 12;
           scope.timeSeparator = timeSeparator;
@@ -3895,15 +3996,19 @@ angular.module('mgcrea.ngStrap.timepicker', [
             return date.getHours() === $timepicker.$date.getHours();
           } else if(index === 1) {
             return date.getMinutes() === $timepicker.$date.getMinutes();
+          } else if(index === 2) {
+            return date.getSeconds() === $timepicker.$date.getSeconds();
           }
         };
 
         $timepicker.$isDisabled = function(date, index) {
           var selectedTime;
           if(index === 0) {
-            selectedTime = date.getTime() + viewDate.minute * 6e4;
+            selectedTime = date.getTime() + viewDate.minute * 6e4 + viewDate.second * 1e3;
           } else if(index === 1) {
-            selectedTime = date.getTime() + viewDate.hour * 36e5;
+            selectedTime = date.getTime() + viewDate.hour * 36e5 + viewDate.second * 1e3;
+          } else if(index === 2) {
+            selectedTime = date.getTime() + viewDate.hour * 36e5 + viewDate.minute * 6e4;
           }
           return selectedTime < options.minTime * 1 || selectedTime > options.maxTime * 1;
         };
@@ -3920,11 +4025,15 @@ angular.module('mgcrea.ngStrap.timepicker', [
           var newDate = new Date($timepicker.$date);
           var hours = newDate.getHours(), hoursLength = formatDate(newDate, hoursFormat).length;
           var minutes = newDate.getMinutes(), minutesLength = formatDate(newDate, minutesFormat).length;
+          var seconds = newDate.getSeconds(), secondsLength = formatDate(newDate, secondsFormat).length;
           if (index === 0) {
             newDate.setHours(hours - (parseInt(options.hourStep, 10) * value));
           }
-          else {
+          else if (index === 1) {
             newDate.setMinutes(minutes - (parseInt(options.minuteStep, 10) * value));
+          }
+          else if (index === 2) {
+            newDate.setSeconds(seconds - (parseInt(options.secondStep, 10) * value));
           }
           $timepicker.select(newDate, index, true);
         };
@@ -3932,11 +4041,14 @@ angular.module('mgcrea.ngStrap.timepicker', [
         $timepicker.$moveIndex = function(value, index) {
           var targetDate;
           if(index === 0) {
-            targetDate = new Date(1970, 0, 1, viewDate.hour + (value * options.length), viewDate.minute);
+            targetDate = new Date(1970, 0, 1, viewDate.hour + (value * options.length), viewDate.minute, viewDate.second);
             angular.extend(viewDate, {hour: targetDate.getHours()});
           } else if(index === 1) {
-            targetDate = new Date(1970, 0, 1, viewDate.hour, viewDate.minute + (value * options.length * options.minuteStep));
+            targetDate = new Date(1970, 0, 1, viewDate.hour, viewDate.minute + (value * options.length * options.minuteStep), viewDate.second);
             angular.extend(viewDate, {minute: targetDate.getMinutes()});
+          } else if(index === 2) {
+            targetDate = new Date(1970, 0, 1, viewDate.hour, viewDate.minute, viewDate.second + (value * options.length * options.secondStep));
+            angular.extend(viewDate, {second: targetDate.getSeconds()});
           }
           $timepicker.$build();
         };
@@ -3967,8 +4079,10 @@ angular.module('mgcrea.ngStrap.timepicker', [
           var newDate = new Date($timepicker.$date);
           var hours = newDate.getHours(), hoursLength = formatDate(newDate, hoursFormat).length;
           var minutes = newDate.getMinutes(), minutesLength = formatDate(newDate, minutesFormat).length;
+          var seconds = newDate.getSeconds(), secondsLength = formatDate(newDate, secondsFormat).length;
+          var sepLength = 1;
           var lateralMove = /(37|39)/.test(evt.keyCode);
-          var count = 2 + showAM * 1;
+          var count = 2 + showSeconds * 1 + showAM * 1;
 
           // Navigate indexes (left, right)
           if (lateralMove) {
@@ -3978,21 +4092,29 @@ angular.module('mgcrea.ngStrap.timepicker', [
 
           // Update values (up, down)
           var selectRange = [0, hoursLength];
+          var incr = 0;
+          if (evt.keyCode === 38) incr = -1;
+          if (evt.keyCode === 40) incr = +1;
+          var isSeconds = selectedIndex === 2 && showSeconds;
+          var isMeridian = selectedIndex === 2 && !showSeconds || selectedIndex === 3 && showSeconds;
           if(selectedIndex === 0) {
-            if(evt.keyCode === 38) newDate.setHours(hours - parseInt(options.hourStep, 10));
-            else if(evt.keyCode === 40) newDate.setHours(hours + parseInt(options.hourStep, 10));
+            newDate.setHours(hours + incr*parseInt(options.hourStep, 10));
             // re-calculate hours length because we have changed hours value
             hoursLength = formatDate(newDate, hoursFormat).length;
             selectRange = [0, hoursLength];
           } else if(selectedIndex === 1) {
-            if(evt.keyCode === 38) newDate.setMinutes(minutes - parseInt(options.minuteStep, 10));
-            else if(evt.keyCode === 40) newDate.setMinutes(minutes + parseInt(options.minuteStep, 10));
+            newDate.setMinutes(minutes + incr*parseInt(options.minuteStep, 10));
             // re-calculate minutes length because we have changes minutes value
             minutesLength = formatDate(newDate, minutesFormat).length;
-            selectRange = [hoursLength + 1, hoursLength + 1 + minutesLength];
-          } else if(selectedIndex === 2) {
+            selectRange = [hoursLength + sepLength, minutesLength];
+          } else if(isSeconds) {
+            newDate.setSeconds(seconds + incr*parseInt(options.secondStep, 10));
+            // re-calculate seconds length because we have changes seconds value
+            secondsLength = formatDate(newDate, secondsFormat).length;
+            selectRange = [hoursLength + sepLength + minutesLength + sepLength, secondsLength];
+          } else if(isMeridian) {
             if(!lateralMove) $timepicker.switchMeridian();
-            selectRange = [hoursLength + 1 + minutesLength + 1, hoursLength + 1 + minutesLength + 3];
+            selectRange = [hoursLength + sepLength + minutesLength + sepLength + (secondsLength + sepLength)*showSeconds, 2];
           }
           $timepicker.select(newDate, selectedIndex, true);
           createSelection(selectRange[0], selectRange[1]);
@@ -4001,7 +4123,8 @@ angular.module('mgcrea.ngStrap.timepicker', [
 
         // Private
 
-        function createSelection(start, end) {
+        function createSelection(start, length) {
+          var end = start + length;
           if(element[0].createTextRange) {
             var selRange = element[0].createTextRange();
             selRange.collapse(true);
@@ -4092,14 +4215,15 @@ angular.module('mgcrea.ngStrap.timepicker', [
 
         // Directive options
         var options = {scope: scope, controller: controller};
-        angular.forEach(['placement', 'container', 'delay', 'trigger', 'keyboard', 'html', 'animation', 'template', 'autoclose', 'timeType', 'timeFormat', 'timezone', 'modelTimeFormat', 'useNative', 'hourStep', 'minuteStep', 'length', 'arrowBehavior', 'iconUp', 'iconDown', 'id'], function(key) {
+        angular.forEach(['placement', 'container', 'delay', 'trigger', 'keyboard', 'html', 'animation', 'template', 'autoclose', 'timeType', 'timeFormat', 'timezone', 'modelTimeFormat', 'useNative', 'hourStep', 'minuteStep', 'secondStep', 'length', 'arrowBehavior', 'iconUp', 'iconDown', 'roundDisplay', 'id'], function(key) {
           if(angular.isDefined(attr[key])) options[key] = attr[key];
         });
 
-        // use string regex match for boolean values
-        var falseValueRegExp = /^(false|0|)$/;
-        angular.forEach(['roundDisplay'], function(key) {
-          if(angular.isDefined(attr[key])) options[key] = !falseValueRegExp.test(attr[key]);
+        // use string regex match boolean attr falsy values, leave truthy values be
+        var falseValueRegExp = /^(false|0|)$/i;
+        angular.forEach(['html', 'container', 'autoclose', 'useNative', 'roundDisplay'], function(key) {
+          if(angular.isDefined(attr[key]) && falseValueRegExp.test(attr[key]))
+            options[key] = false;
         });
 
         // Visibility binding support
@@ -4227,279 +4351,6 @@ angular.module('mgcrea.ngStrap.timepicker', [
           if (timepicker) timepicker.destroy();
           options = null;
           timepicker = null;
-        });
-
-      }
-    };
-
-  }]);
-
-// Source: typeahead.js
-angular.module('mgcrea.ngStrap.typeahead', ['mgcrea.ngStrap.tooltip', 'mgcrea.ngStrap.helpers.parseOptions'])
-
-  .provider('$typeahead', function() {
-
-    var defaults = this.defaults = {
-      animation: 'am-fade',
-      prefixClass: 'typeahead',
-      prefixEvent: '$typeahead',
-      placement: 'bottom-left',
-      template: 'typeahead/typeahead.tpl.html',
-      trigger: 'focus',
-      container: false,
-      keyboard: true,
-      html: false,
-      delay: 0,
-      minLength: 1,
-      filter: 'filter',
-      limit: 6,
-      autoSelect: false,
-      comparator: ''
-    };
-
-    this.$get = ["$window", "$rootScope", "$tooltip", "$timeout", function($window, $rootScope, $tooltip, $timeout) {
-
-      var bodyEl = angular.element($window.document.body);
-
-      function TypeaheadFactory(element, controller, config) {
-
-        var $typeahead = {};
-
-        // Common vars
-        var options = angular.extend({}, defaults, config);
-
-        $typeahead = $tooltip(element, options);
-        var parentScope = config.scope;
-        var scope = $typeahead.$scope;
-
-        scope.$resetMatches = function(){
-          scope.$matches = [];
-          scope.$activeIndex = options.autoSelect ? 0 : -1; // If set to 0, the first match will be highlighted
-        };
-        scope.$resetMatches();
-
-        scope.$activate = function(index) {
-          scope.$$postDigest(function() {
-            $typeahead.activate(index);
-          });
-        };
-
-        scope.$select = function(index, evt) {
-          scope.$$postDigest(function() {
-            $typeahead.select(index);
-          });
-        };
-
-        scope.$isVisible = function() {
-          return $typeahead.$isVisible();
-        };
-
-        // Public methods
-
-        $typeahead.update = function(matches) {
-          scope.$matches = matches;
-          if(scope.$activeIndex >= matches.length) {
-            scope.$activeIndex = options.autoSelect ? 0: -1;
-          }
-          
-          // When the placement is not one of the bottom placements, re-calc the positioning
-          // so the results render correctly.
-          if (/^(bottom|bottom-left|bottom-right)$/.test(options.placement)) return;
-          
-          // wrap in a $timeout so the results are updated
-          // before repositioning
-          $timeout($typeahead.$applyPlacement);
-        };
-
-        $typeahead.activate = function(index) {
-          scope.$activeIndex = index;
-        };
-
-        $typeahead.select = function(index) {
-          var value = scope.$matches[index].value;
-          // console.log('$setViewValue', value);
-          controller.$setViewValue(value);
-          controller.$render();
-          scope.$resetMatches();
-          if(parentScope) parentScope.$digest();
-          // Emit event
-          scope.$emit(options.prefixEvent + '.select', value, index, $typeahead);
-        };
-
-        // Protected methods
-
-        $typeahead.$isVisible = function() {
-          if(!options.minLength || !controller) {
-            return !!scope.$matches.length;
-          }
-          // minLength support
-          return scope.$matches.length && angular.isString(controller.$viewValue) && controller.$viewValue.length >= options.minLength;
-        };
-
-        $typeahead.$getIndex = function(value) {
-          var l = scope.$matches.length, i = l;
-          if(!l) return;
-          for(i = l; i--;) {
-            if(scope.$matches[i].value === value) break;
-          }
-          if(i < 0) return;
-          return i;
-        };
-
-        $typeahead.$onMouseDown = function(evt) {
-          // Prevent blur on mousedown
-          evt.preventDefault();
-          evt.stopPropagation();
-        };
-
-        $typeahead.$onKeyDown = function(evt) {
-          if(!/(38|40|13)/.test(evt.keyCode)) return;
-
-          // Let ngSubmit pass if the typeahead tip is hidden
-          if($typeahead.$isVisible()) {
-            evt.preventDefault();
-            evt.stopPropagation();
-          }
-
-          // Select with enter
-          if(evt.keyCode === 13 && scope.$matches.length) {
-            $typeahead.select(scope.$activeIndex);
-          }
-
-          // Navigate with keyboard
-          else if(evt.keyCode === 38 && scope.$activeIndex > 0) scope.$activeIndex--;
-          else if(evt.keyCode === 40 && scope.$activeIndex < scope.$matches.length - 1) scope.$activeIndex++;
-          else if(angular.isUndefined(scope.$activeIndex)) scope.$activeIndex = 0;
-          scope.$digest();
-        };
-
-        // Overrides
-
-        var show = $typeahead.show;
-        $typeahead.show = function() {
-          show();
-          // use timeout to hookup the events to prevent
-          // event bubbling from being processed imediately.
-          $timeout(function() {
-            $typeahead.$element.on('mousedown', $typeahead.$onMouseDown);
-            if(options.keyboard) {
-              element.on('keydown', $typeahead.$onKeyDown);
-            }
-          }, 0, false);
-        };
-
-        var hide = $typeahead.hide;
-        $typeahead.hide = function() {
-          $typeahead.$element.off('mousedown', $typeahead.$onMouseDown);
-          if(options.keyboard) {
-            element.off('keydown', $typeahead.$onKeyDown);
-          }
-          if(!options.autoSelect)
-            $typeahead.activate(-1);
-          hide();
-        };
-
-        return $typeahead;
-
-      }
-
-      TypeaheadFactory.defaults = defaults;
-      return TypeaheadFactory;
-
-    }];
-
-  })
-
-  .directive('bsTypeahead', ["$window", "$parse", "$q", "$typeahead", "$parseOptions", function($window, $parse, $q, $typeahead, $parseOptions) {
-
-    var defaults = $typeahead.defaults;
-
-    return {
-      restrict: 'EAC',
-      require: 'ngModel',
-      link: function postLink(scope, element, attr, controller) {
-
-        // Directive options
-        var options = {scope: scope};
-        angular.forEach(['placement', 'container', 'delay', 'trigger', 'keyboard', 'html', 'animation', 'template', 'filter', 'limit', 'minLength', 'watchOptions', 'selectMode', 'autoSelect', 'comparator', 'id'], function(key) {
-          if(angular.isDefined(attr[key])) options[key] = attr[key];
-        });
-
-        // Disable browser autocompletion
-        element.attr('autocomplete' ,'off');
-        
-        // Build proper bsOptions
-        var filter = options.filter || defaults.filter;
-        var limit = options.limit || defaults.limit;
-        var comparator = options.comparator || defaults.comparator;
-
-        var bsOptions = attr.bsOptions;
-        if(filter) bsOptions += ' | ' + filter + ':$viewValue';
-        if (comparator) bsOptions += ':' + comparator;
-        if(limit) bsOptions += ' | limitTo:' + limit;
-        var parsedOptions = $parseOptions(bsOptions);
-
-        // Initialize typeahead
-        var typeahead = $typeahead(element, controller, options);
-
-        // Watch options on demand
-        if(options.watchOptions) {
-          // Watch bsOptions values before filtering for changes, drop function calls
-          var watchedOptions = parsedOptions.$match[7].replace(/\|.+/, '').replace(/\(.*\)/g, '').trim();
-          scope.$watch(watchedOptions, function (newValue, oldValue) {
-            // console.warn('scope.$watch(%s)', watchedOptions, newValue, oldValue);
-            parsedOptions.valuesFn(scope, controller).then(function (values) {
-              typeahead.update(values);
-              controller.$render();
-            });
-          }, true);
-        }
-
-        // Watch model for changes
-        scope.$watch(attr.ngModel, function(newValue, oldValue) {
-          // console.warn('$watch', element.attr('ng-model'), newValue);
-          scope.$modelValue = newValue; // Publish modelValue on scope for custom templates
-          parsedOptions.valuesFn(scope, controller)
-          .then(function(values) {
-            // Prevent input with no future prospect if selectMode is truthy
-            // @TODO test selectMode
-            if(options.selectMode && !values.length && newValue.length > 0) {
-              controller.$setViewValue(controller.$viewValue.substring(0, controller.$viewValue.length - 1));
-              return;
-            }
-            if(values.length > limit) values = values.slice(0, limit);
-            var isVisible = typeahead.$isVisible();
-            isVisible && typeahead.update(values);
-            // Do not re-queue an update if a correct value has been selected
-            if(values.length === 1 && values[0].value === newValue) return;
-            !isVisible && typeahead.update(values);
-            // Queue a new rendering that will leverage collection loading
-            controller.$render();
-          });
-        });
-
-        // modelValue -> $formatters -> viewValue
-        controller.$formatters.push(function(modelValue) {
-          // console.warn('$formatter("%s"): modelValue=%o (%o)', element.attr('ng-model'), modelValue, typeof modelValue);
-          var displayValue = parsedOptions.displayValue(modelValue);
-          return displayValue === undefined ? '' : displayValue;
-        });
-
-        // Model rendering in view
-        controller.$render = function () {
-          // console.warn('$render', element.attr('ng-model'), 'controller.$modelValue', typeof controller.$modelValue, controller.$modelValue, 'controller.$viewValue', typeof controller.$viewValue, controller.$viewValue);
-          if(controller.$isEmpty(controller.$viewValue)) return element.val('');
-          var index = typeahead.$getIndex(controller.$modelValue);
-          var selected = angular.isDefined(index) ? typeahead.$scope.$matches[index].label : controller.$viewValue;
-          selected = angular.isObject(selected) ? parsedOptions.displayValue(selected) : selected;
-          element.val(selected ? selected.toString().replace(/<(?:.|\n)*?>/gm, '').trim() : '');
-        };
-
-        // Garbage collection
-        scope.$on('$destroy', function() {
-          if (typeahead) typeahead.destroy();
-          options = null;
-          typeahead = null;
         });
 
       }
@@ -5238,13 +5089,24 @@ angular.module('mgcrea.ngStrap.tooltip', ['mgcrea.ngStrap.helpers.dimensions'])
 
         // Directive options
         var options = {scope: scope};
-        angular.forEach(['template', 'contentTemplate', 'placement', 'container', 'delay', 'trigger', 'keyboard', 'html', 'animation', 'backdropAnimation', 'type', 'customClass', 'id'], function(key) {
+        angular.forEach(['template', 'contentTemplate', 'placement', 'container', 'delay', 'trigger', 'html', 'animation', 'backdropAnimation', 'type', 'customClass', 'id'], function(key) {
           if(angular.isDefined(attr[key])) options[key] = attr[key];
         });
 
-        // should not parse target attribute, only data-target
-        if(element.attr('data-target')) {
-          options.target = element.attr('data-target');
+        // use string regex match boolean attr falsy values, leave truthy values be
+        var falseValueRegExp = /^(false|0|)$/i;
+        angular.forEach(['html', 'container'], function(key) {
+          if(angular.isDefined(attr[key]) && falseValueRegExp.test(attr[key]))
+            options[key] = false;
+        });
+
+        // should not parse target attribute (anchor tag), only data-target #1454
+        var dataTarget = element.attr('data-target');
+        if(angular.isDefined(dataTarget)) {
+          if(falseValueRegExp.test(dataTarget))
+            options.target = false;
+          else
+            options.target = dataTarget;
         }
 
         // overwrite inherited title value when no value specified
@@ -5305,6 +5167,288 @@ angular.module('mgcrea.ngStrap.tooltip', ['mgcrea.ngStrap.helpers.dimensions'])
           if(tooltip) tooltip.destroy();
           options = null;
           tooltip = null;
+        });
+
+      }
+    };
+
+  }]);
+
+// Source: typeahead.js
+angular.module('mgcrea.ngStrap.typeahead', ['mgcrea.ngStrap.tooltip', 'mgcrea.ngStrap.helpers.parseOptions'])
+
+  .provider('$typeahead', function() {
+
+    var defaults = this.defaults = {
+      animation: 'am-fade',
+      prefixClass: 'typeahead',
+      prefixEvent: '$typeahead',
+      placement: 'bottom-left',
+      template: 'typeahead/typeahead.tpl.html',
+      trigger: 'focus',
+      container: false,
+      keyboard: true,
+      html: false,
+      delay: 0,
+      minLength: 1,
+      filter: 'filter',
+      limit: 6,
+      autoSelect: false,
+      comparator: '',
+      trimValue: true
+    };
+
+    this.$get = ["$window", "$rootScope", "$tooltip", "$timeout", function($window, $rootScope, $tooltip, $timeout) {
+
+      var bodyEl = angular.element($window.document.body);
+
+      function TypeaheadFactory(element, controller, config) {
+
+        var $typeahead = {};
+
+        // Common vars
+        var options = angular.extend({}, defaults, config);
+
+        $typeahead = $tooltip(element, options);
+        var parentScope = config.scope;
+        var scope = $typeahead.$scope;
+
+        scope.$resetMatches = function(){
+          scope.$matches = [];
+          scope.$activeIndex = options.autoSelect ? 0 : -1; // If set to 0, the first match will be highlighted
+        };
+        scope.$resetMatches();
+
+        scope.$activate = function(index) {
+          scope.$$postDigest(function() {
+            $typeahead.activate(index);
+          });
+        };
+
+        scope.$select = function(index, evt) {
+          scope.$$postDigest(function() {
+            $typeahead.select(index);
+          });
+        };
+
+        scope.$isVisible = function() {
+          return $typeahead.$isVisible();
+        };
+
+        // Public methods
+
+        $typeahead.update = function(matches) {
+          scope.$matches = matches;
+          if(scope.$activeIndex >= matches.length) {
+            scope.$activeIndex = options.autoSelect ? 0: -1;
+          }
+
+          // When the placement is not one of the bottom placements, re-calc the positioning
+          // so the results render correctly.
+          if (/^(bottom|bottom-left|bottom-right)$/.test(options.placement)) return;
+
+          // wrap in a $timeout so the results are updated
+          // before repositioning
+          $timeout($typeahead.$applyPlacement);
+        };
+
+        $typeahead.activate = function(index) {
+          scope.$activeIndex = index;
+        };
+
+        $typeahead.select = function(index) {
+          if(index === -1) return;
+          var value = scope.$matches[index].value;
+          // console.log('$setViewValue', value);
+          controller.$setViewValue(value);
+          controller.$render();
+          scope.$resetMatches();
+          if(parentScope) parentScope.$digest();
+          // Emit event
+          scope.$emit(options.prefixEvent + '.select', value, index, $typeahead);
+        };
+
+        // Protected methods
+
+        $typeahead.$isVisible = function() {
+          if(!options.minLength || !controller) {
+            return !!scope.$matches.length;
+          }
+          // minLength support
+          return scope.$matches.length && angular.isString(controller.$viewValue) && controller.$viewValue.length >= options.minLength;
+        };
+
+        $typeahead.$getIndex = function(value) {
+          var l = scope.$matches.length, i = l;
+          if(!l) return;
+          for(i = l; i--;) {
+            if(scope.$matches[i].value === value) break;
+          }
+          if(i < 0) return;
+          return i;
+        };
+
+        $typeahead.$onMouseDown = function(evt) {
+          // Prevent blur on mousedown
+          evt.preventDefault();
+          evt.stopPropagation();
+        };
+
+        $typeahead.$onKeyDown = function(evt) {
+          if(!/(38|40|13)/.test(evt.keyCode)) return;
+
+          // Let ngSubmit pass if the typeahead tip is hidden or no option is selected
+          if($typeahead.$isVisible() && !(evt.keyCode === 13 && scope.$activeIndex === -1)) {
+            evt.preventDefault();
+            evt.stopPropagation();
+          }
+
+          // Select with enter
+          if(evt.keyCode === 13 && scope.$matches.length) {
+            $typeahead.select(scope.$activeIndex);
+          }
+
+          // Navigate with keyboard
+          else if(evt.keyCode === 38 && scope.$activeIndex > 0) scope.$activeIndex--;
+          else if(evt.keyCode === 40 && scope.$activeIndex < scope.$matches.length - 1) scope.$activeIndex++;
+          else if(angular.isUndefined(scope.$activeIndex)) scope.$activeIndex = 0;
+          scope.$digest();
+        };
+
+        // Overrides
+
+        var show = $typeahead.show;
+        $typeahead.show = function() {
+          show();
+          // use timeout to hookup the events to prevent
+          // event bubbling from being processed imediately.
+          $timeout(function() {
+            $typeahead.$element.on('mousedown', $typeahead.$onMouseDown);
+            if(options.keyboard) {
+              element.on('keydown', $typeahead.$onKeyDown);
+            }
+          }, 0, false);
+        };
+
+        var hide = $typeahead.hide;
+        $typeahead.hide = function() {
+          $typeahead.$element.off('mousedown', $typeahead.$onMouseDown);
+          if(options.keyboard) {
+            element.off('keydown', $typeahead.$onKeyDown);
+          }
+          if(!options.autoSelect)
+            $typeahead.activate(-1);
+          hide();
+        };
+
+        return $typeahead;
+
+      }
+
+      TypeaheadFactory.defaults = defaults;
+      return TypeaheadFactory;
+
+    }];
+
+  })
+
+  .directive('bsTypeahead', ["$window", "$parse", "$q", "$typeahead", "$parseOptions", function($window, $parse, $q, $typeahead, $parseOptions) {
+
+    var defaults = $typeahead.defaults;
+
+    return {
+      restrict: 'EAC',
+      require: 'ngModel',
+      link: function postLink(scope, element, attr, controller) {
+
+        // Directive options
+        var options = {scope: scope};
+        angular.forEach(['placement', 'container', 'delay', 'trigger', 'keyboard', 'html', 'animation', 'template', 'filter', 'limit', 'minLength', 'watchOptions', 'selectMode', 'autoSelect', 'comparator', 'id'], function(key) {
+          if(angular.isDefined(attr[key])) options[key] = attr[key];
+        });
+
+        // use string regex match boolean attr falsy values, leave truthy values be
+        var falseValueRegExp = /^(false|0|)$/i;
+        angular.forEach(['html', 'container', 'trimValue'], function(key) {
+          if(angular.isDefined(attr[key]) && falseValueRegExp.test(attr[key])) options[key] = false;
+        });
+
+        // Disable browser autocompletion
+        element.attr('autocomplete' ,'off');
+
+        // Build proper bsOptions
+        var filter = options.filter || defaults.filter;
+        var limit = options.limit || defaults.limit;
+        var comparator = options.comparator || defaults.comparator;
+
+        var bsOptions = attr.bsOptions;
+        if(filter) bsOptions += ' | ' + filter + ':$viewValue';
+        if (comparator) bsOptions += ':' + comparator;
+        if(limit) bsOptions += ' | limitTo:' + limit;
+        var parsedOptions = $parseOptions(bsOptions);
+
+        // Initialize typeahead
+        var typeahead = $typeahead(element, controller, options);
+
+        // Watch options on demand
+        if(options.watchOptions) {
+          // Watch bsOptions values before filtering for changes, drop function calls
+          var watchedOptions = parsedOptions.$match[7].replace(/\|.+/, '').replace(/\(.*\)/g, '').trim();
+          scope.$watchCollection(watchedOptions, function (newValue, oldValue) {
+            // console.warn('scope.$watch(%s)', watchedOptions, newValue, oldValue);
+            parsedOptions.valuesFn(scope, controller).then(function (values) {
+              typeahead.update(values);
+              controller.$render();
+            });
+          });
+        }
+
+        // Watch model for changes
+        scope.$watch(attr.ngModel, function(newValue, oldValue) {
+          // console.warn('$watch', element.attr('ng-model'), newValue);
+          scope.$modelValue = newValue; // Publish modelValue on scope for custom templates
+          parsedOptions.valuesFn(scope, controller)
+          .then(function(values) {
+            // Prevent input with no future prospect if selectMode is truthy
+            // @TODO test selectMode
+            if(options.selectMode && !values.length && newValue.length > 0) {
+              controller.$setViewValue(controller.$viewValue.substring(0, controller.$viewValue.length - 1));
+              return;
+            }
+            if(values.length > limit) values = values.slice(0, limit);
+            var isVisible = typeahead.$isVisible();
+            isVisible && typeahead.update(values);
+            // Do not re-queue an update if a correct value has been selected
+            if(values.length === 1 && values[0].value === newValue) return;
+            !isVisible && typeahead.update(values);
+            // Queue a new rendering that will leverage collection loading
+            controller.$render();
+          });
+        });
+
+        // modelValue -> $formatters -> viewValue
+        controller.$formatters.push(function(modelValue) {
+          // console.warn('$formatter("%s"): modelValue=%o (%o)', element.attr('ng-model'), modelValue, typeof modelValue);
+          var displayValue = parsedOptions.displayValue(modelValue);
+          return displayValue === undefined ? '' : displayValue;
+        });
+
+        // Model rendering in view
+        controller.$render = function () {
+          // console.warn('$render', element.attr('ng-model'), 'controller.$modelValue', typeof controller.$modelValue, controller.$modelValue, 'controller.$viewValue', typeof controller.$viewValue, controller.$viewValue);
+          if(controller.$isEmpty(controller.$viewValue)) return element.val('');
+          var index = typeahead.$getIndex(controller.$modelValue);
+          var selected = angular.isDefined(index) ? typeahead.$scope.$matches[index].label : controller.$viewValue;
+          selected = angular.isObject(selected) ? parsedOptions.displayValue(selected) : selected;
+          var value = selected ? selected.toString().replace(/<(?:.|\n)*?>/gm, '') : '';
+          element.val(options.trimValue === false ? value : value.trim());
+        };
+
+        // Garbage collection
+        scope.$on('$destroy', function() {
+          if (typeahead) typeahead.destroy();
+          options = null;
+          typeahead = null;
         });
 
       }

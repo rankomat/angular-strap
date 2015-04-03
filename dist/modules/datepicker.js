@@ -1,6 +1,6 @@
 /**
  * angular-strap
- * @version v2.2.1 - 2015-03-10
+ * @version v2.2.1 - 2015-04-01
  * @link http://mgcrea.github.io/angular-strap
  * @author Olivier Louvignes (olivier@mg-crea.com)
  * @license MIT License, http://www.opensource.org/licenses/MIT
@@ -115,6 +115,18 @@ angular.module('mgcrea.ngStrap.datepicker', [
           } else {
             angular.extend(viewDate, {year: date.getFullYear(), month: date.getMonth(), date: date.getDate()});
             $datepicker.setMode(scope.$mode - 1);
+            $datepicker.$build();
+          }
+        };
+
+        $datepicker.rebuildViews = function() {
+          var newPickerViews = datepickerViews($datepicker);
+          if(!angular.equals(newPickerViews.viewDate, viewDate)) {
+            pickerViews = newPickerViews;
+            $datepicker.$views = pickerViews.views;
+            viewDate = pickerViews.viewDate;
+            $picker = $datepicker.$views[scope.$mode];
+            options = $datepicker.$options;
             $datepicker.$build();
           }
         };
@@ -273,8 +285,15 @@ angular.module('mgcrea.ngStrap.datepicker', [
 
         // Directive options
         var options = {scope: scope, controller: controller};
-        angular.forEach(['placement', 'container', 'delay', 'trigger', 'keyboard', 'html', 'animation', 'template', 'autoclose', 'dateType', 'dateFormat', 'timezone', 'modelDateFormat', 'dayFormat', 'strictFormat', 'startWeek', 'startDate', 'useNative', 'lang', 'startView', 'minView', 'iconLeft', 'iconRight', 'daysOfWeekDisabled', 'id'], function(key) {
+        angular.forEach(['placement', 'container', 'delay', 'trigger', 'html', 'animation', 'template', 'autoclose', 'dateType', 'dateFormat', 'timezone', 'modelDateFormat', 'dayFormat', 'strictFormat', 'startWeek', 'startDate', 'useNative', 'lang', 'startView', 'minView', 'iconLeft', 'iconRight', 'daysOfWeekDisabled', 'id'], function(key) {
           if(angular.isDefined(attr[key])) options[key] = attr[key];
+        });
+
+        // use string regex match boolean attr falsy values, leave truthy values be
+        var falseValueRegExp = /^(false|0|)$/i;
+        angular.forEach(['html', 'container', 'autoclose', 'useNative'], function(key) {
+          if(angular.isDefined(attr[key]) && falseValueRegExp.test(attr[key]))
+            options[key] = false;
         });
 
         // Visibility binding support
@@ -308,6 +327,12 @@ angular.module('mgcrea.ngStrap.datepicker', [
             !isNaN(datepicker.$options[key]) && datepicker.$build(false);
             validateAgainstMinMaxDate(controller.$dateValue);
           });
+        });
+
+        // [Marek Lewandowski] rebuilding datepicker view after update of startDate attribute.
+        angular.isDefined(attr.startDate) && attr.$observe('startDate', function(newStartDate){
+          datepicker.$options.startDate = newStartDate;
+          datepicker.rebuildViews();
         });
 
         // Watch model for changes
