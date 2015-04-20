@@ -1,6 +1,6 @@
 /**
  * angular-strap
- * @version v2.2.1 - 2015-04-01
+ * @version v2.2.1-rankomat - 2015-04-01
  * @link http://mgcrea.github.io/angular-strap
  * @author Olivier Louvignes (olivier@mg-crea.com)
  * @license MIT License, http://www.opensource.org/licenses/MIT
@@ -1317,6 +1317,12 @@ angular.module('mgcrea.ngStrap.datepicker', [
           // Only update the model when we have a valid date
           if(isValid) controller.$dateValue = parsedDate;
         }
+
+        // [Marek Lewandowski] Customization. Updates input's text value with datepickers's model.
+        controller.$parsers.unshift(function(viewValue) {
+          controller.$render();
+          return viewValue;
+        });
 
         // viewValue -> $parsers -> modelValue
         controller.$parsers.unshift(function(viewValue) {
