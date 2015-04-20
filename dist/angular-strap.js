@@ -1319,10 +1319,10 @@ angular.module('mgcrea.ngStrap.datepicker', [
         }
 
         // [Marek Lewandowski] Customization. Updates input's text value with datepickers's model.
-        controller.$parsers.unshift(function(viewValue) {
-          controller.$render();
-          return viewValue;
-        });
+        //controller.$parsers.unshift(function(viewValue) {
+        //  controller.$render();
+        //  return viewValue;
+        //});
 
         // viewValue -> $parsers -> modelValue
         controller.$parsers.unshift(function(viewValue) {
@@ -2226,7 +2226,7 @@ angular.module('mgcrea.ngStrap.helpers.dimensions', [])
         left: boxRect.left + (window.pageXOffset || docElement.documentElement.scrollLeft) - (docElement.documentElement.clientLeft || 0)
       };
     };
-  
+
     /**
      * Provides set equivalent of jQuery's offset function:
      * @required-by bootstrap-tooltip
@@ -2246,18 +2246,18 @@ angular.module('mgcrea.ngStrap.helpers.dimensions', [])
           position = fn.css(element, 'position'),
           curElem = angular.element(element),
           props = {};
-      
+
       // Set position first, in-case top/left are set even on static elem
       if (position === 'static') {
         element.style.position = 'relative';
       }
-      
+
       curOffset = fn.offset(element);
       curCSSTop = fn.css(element, 'top');
       curCSSLeft = fn.css(element, 'left');
-      calculatePosition = (position === 'absolute' || position === 'fixed') && 
+      calculatePosition = (position === 'absolute' || position === 'fixed') &&
                           (curCSSTop + curCSSLeft).indexOf('auto') > -1;
-      
+
       // Need to be able to calculate position if either
       // top or left is auto and position is either absolute or fixed
       if (calculatePosition) {
@@ -2268,11 +2268,11 @@ angular.module('mgcrea.ngStrap.helpers.dimensions', [])
         curTop = parseFloat(curCSSTop) || 0;
         curLeft = parseFloat(curCSSLeft) || 0;
       }
-      
+
       if (angular.isFunction(options)) {
         options = options.call(element, i, curOffset);
       }
-      
+
       if (options.top !== null ) {
         props.top = (options.top - curOffset.top) + curTop;
       }
