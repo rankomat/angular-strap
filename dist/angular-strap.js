@@ -1,6 +1,6 @@
 /**
  * angular-strap
- * @version v2.2.1 - 2015-04-01
+ * @version v2.2.2-rankomat - 2015-04-20
  * @link http://mgcrea.github.io/angular-strap
  * @author Olivier Louvignes (olivier@mg-crea.com)
  * @license MIT License, http://www.opensource.org/licenses/MIT
@@ -992,7 +992,8 @@ angular.module('mgcrea.ngStrap.datepicker', [
       startWeek: 0,
       daysOfWeekDisabled: '',
       iconLeft: 'glyphicon glyphicon-chevron-left',
-      iconRight: 'glyphicon glyphicon-chevron-right'
+      iconRight: 'glyphicon glyphicon-chevron-right',
+      updateModelAnyway: false
     };
 
     this.$get = ["$window", "$document", "$rootScope", "$sce", "$dateFormatter", "datepickerViews", "$tooltip", "$timeout", function($window, $document, $rootScope, $sce, $dateFormatter, datepickerViews, $tooltip, $timeout) {
@@ -1233,7 +1234,7 @@ angular.module('mgcrea.ngStrap.datepicker', [
 
         // Directive options
         var options = {scope: scope, controller: controller};
-        angular.forEach(['placement', 'container', 'delay', 'trigger', 'html', 'animation', 'template', 'autoclose', 'dateType', 'dateFormat', 'timezone', 'modelDateFormat', 'dayFormat', 'strictFormat', 'startWeek', 'startDate', 'useNative', 'lang', 'startView', 'minView', 'iconLeft', 'iconRight', 'daysOfWeekDisabled', 'id'], function(key) {
+        angular.forEach(['placement', 'container', 'delay', 'trigger', 'html', 'animation', 'template', 'autoclose', 'dateType', 'dateFormat', 'timezone', 'modelDateFormat', 'dayFormat', 'strictFormat', 'startWeek', 'startDate', 'useNative', 'lang', 'startView', 'minView', 'iconLeft', 'iconRight', 'daysOfWeekDisabled', 'id', 'updateModelAnyway'], function(key) {
           if(angular.isDefined(attr[key])) options[key] = attr[key];
         });
 
@@ -1315,7 +1316,7 @@ angular.module('mgcrea.ngStrap.datepicker', [
           controller.$setValidity('min', isMinValid);
           controller.$setValidity('max', isMaxValid);
           // Only update the model when we have a valid date
-          if(isValid) controller.$dateValue = parsedDate;
+          if(isValid || datepicker.$options.updateModelAnyway) controller.$dateValue = parsedDate;
         }
 
         // viewValue -> $parsers -> modelValue
@@ -1444,167 +1445,167 @@ angular.module('mgcrea.ngStrap.datepicker', [
         var viewDate = {year: startDate.getFullYear(), month: startDate.getMonth(), date: startDate.getDate()};
 
         var views = [{
-            format: options.dayFormat,
-            split: 7,
-            steps: { month: 1 },
-            update: function(date, force) {
-              if(!this.built || force || date.getFullYear() !== viewDate.year || date.getMonth() !== viewDate.month) {
-                angular.extend(viewDate, {year: picker.$date.getFullYear(), month: picker.$date.getMonth(), date: picker.$date.getDate()});
-                picker.$build();
-              } else if(date.getDate() !== viewDate.date) {
-                viewDate.date = picker.$date.getDate();
-                picker.$updateSelected();
-              }
-            },
-            build: function() {
-              var firstDayOfMonth = new Date(viewDate.year, viewDate.month, 1), firstDayOfMonthOffset = firstDayOfMonth.getTimezoneOffset();
-              var firstDate = new Date(+firstDayOfMonth - mod(firstDayOfMonth.getDay() - options.startWeek, 7) * 864e5), firstDateOffset = firstDate.getTimezoneOffset();
-              var today = dateParser.timezoneOffsetAdjust(new Date(), options.timezone).toDateString();
-              // Handle daylight time switch
-              if(firstDateOffset !== firstDayOfMonthOffset) firstDate = new Date(+firstDate + (firstDateOffset - firstDayOfMonthOffset) * 60e3);
-              var days = [], day;
-              for(var i = 0; i < 42; i++) { // < 7 * 6
-                day = dateParser.daylightSavingAdjust(new Date(firstDate.getFullYear(), firstDate.getMonth(), firstDate.getDate() + i));
-                days.push({date: day, isToday: day.toDateString() === today, label: formatDate(day, this.format), selected: picker.$date && this.isSelected(day), muted: day.getMonth() !== viewDate.month, disabled: this.isDisabled(day)});
-              }
-              scope.title = formatDate(firstDayOfMonth, options.monthTitleFormat);
-              scope.showLabels = true;
-              scope.labels = weekDaysLabelsHtml;
-              scope.rows = split(days, this.split);
-              this.built = true;
-            },
-            isSelected: function(date) {
-              return picker.$date && date.getFullYear() === picker.$date.getFullYear() && date.getMonth() === picker.$date.getMonth() && date.getDate() === picker.$date.getDate();
-            },
-            isDisabled: function(date) {
-              var time = date.getTime();
+          format: options.dayFormat,
+          split: 7,
+          steps: { month: 1 },
+          update: function(date, force) {
+            if(!this.built || force || date.getFullYear() !== viewDate.year || date.getMonth() !== viewDate.month) {
+              angular.extend(viewDate, {year: picker.$date.getFullYear(), month: picker.$date.getMonth(), date: picker.$date.getDate()});
+              picker.$build();
+            } else if(date.getDate() !== viewDate.date) {
+              viewDate.date = picker.$date.getDate();
+              picker.$updateSelected();
+            }
+          },
+          build: function() {
+            var firstDayOfMonth = new Date(viewDate.year, viewDate.month, 1), firstDayOfMonthOffset = firstDayOfMonth.getTimezoneOffset();
+            var firstDate = new Date(+firstDayOfMonth - mod(firstDayOfMonth.getDay() - options.startWeek, 7) * 864e5), firstDateOffset = firstDate.getTimezoneOffset();
+            var today = dateParser.timezoneOffsetAdjust(new Date(), options.timezone).toDateString();
+            // Handle daylight time switch
+            if(firstDateOffset !== firstDayOfMonthOffset) firstDate = new Date(+firstDate + (firstDateOffset - firstDayOfMonthOffset) * 60e3);
+            var days = [], day;
+            for(var i = 0; i < 42; i++) { // < 7 * 6
+              day = dateParser.daylightSavingAdjust(new Date(firstDate.getFullYear(), firstDate.getMonth(), firstDate.getDate() + i));
+              days.push({date: day, isToday: day.toDateString() === today, label: formatDate(day, this.format), selected: picker.$date && this.isSelected(day), muted: day.getMonth() !== viewDate.month, disabled: this.isDisabled(day)});
+            }
+            scope.title = formatDate(firstDayOfMonth, options.monthTitleFormat);
+            scope.showLabels = true;
+            scope.labels = weekDaysLabelsHtml;
+            scope.rows = split(days, this.split);
+            this.built = true;
+          },
+          isSelected: function(date) {
+            return picker.$date && date.getFullYear() === picker.$date.getFullYear() && date.getMonth() === picker.$date.getMonth() && date.getDate() === picker.$date.getDate();
+          },
+          isDisabled: function(date) {
+            var time = date.getTime();
 
-              // Disabled because of min/max date.
-              if (time < options.minDate || time > options.maxDate) return true;
+            // Disabled because of min/max date.
+            if (time < options.minDate || time > options.maxDate) return true;
 
-              // Disabled due to being a disabled day of the week
-              if (options.daysOfWeekDisabled.indexOf(date.getDay()) !== -1) return true;
+            // Disabled due to being a disabled day of the week
+            if (options.daysOfWeekDisabled.indexOf(date.getDay()) !== -1) return true;
 
-              // Disabled because of disabled date range.
-              if (options.disabledDateRanges) {
-                for (var i = 0; i < options.disabledDateRanges.length; i++) {
-                  if (time >= options.disabledDateRanges[i].start && time <= options.disabledDateRanges[i].end) {
-                    return true;
-                  }
+            // Disabled because of disabled date range.
+            if (options.disabledDateRanges) {
+              for (var i = 0; i < options.disabledDateRanges.length; i++) {
+                if (time >= options.disabledDateRanges[i].start && time <= options.disabledDateRanges[i].end) {
+                  return true;
                 }
               }
-
-              return false;
-            },
-            onKeyDown: function(evt) {
-              if (!picker.$date) {
-                return;
-              }
-              var actualTime = picker.$date.getTime();
-              var newDate;
-
-              if(evt.keyCode === 37) newDate = new Date(actualTime - 1 * 864e5);
-              else if(evt.keyCode === 38) newDate = new Date(actualTime - 7 * 864e5);
-              else if(evt.keyCode === 39) newDate = new Date(actualTime + 1 * 864e5);
-              else if(evt.keyCode === 40) newDate = new Date(actualTime + 7 * 864e5);
-
-              if (!this.isDisabled(newDate)) picker.select(newDate, true);
             }
-          }, {
-            name: 'month',
-            format: options.monthFormat,
-            split: 4,
-            steps: { year: 1 },
-            update: function(date, force) {
-              if(!this.built || date.getFullYear() !== viewDate.year) {
-                angular.extend(viewDate, {year: picker.$date.getFullYear(), month: picker.$date.getMonth(), date: picker.$date.getDate()});
-                picker.$build();
-              } else if(date.getMonth() !== viewDate.month) {
-                angular.extend(viewDate, {month: picker.$date.getMonth(), date: picker.$date.getDate()});
-                picker.$updateSelected();
-              }
-            },
-            build: function() {
-              var firstMonth = new Date(viewDate.year, 0, 1);
-              var months = [], month;
-              for (var i = 0; i < 12; i++) {
-                month = new Date(viewDate.year, i, 1);
-                months.push({date: month, label: formatDate(month, this.format), selected: picker.$isSelected(month), disabled: this.isDisabled(month)});
-              }
-              scope.title = formatDate(month, options.yearTitleFormat);
-              scope.showLabels = false;
-              scope.rows = split(months, this.split);
-              this.built = true;
-            },
-            isSelected: function(date) {
-              return picker.$date && date.getFullYear() === picker.$date.getFullYear() && date.getMonth() === picker.$date.getMonth();
-            },
-            isDisabled: function(date) {
-              var lastDate = +new Date(date.getFullYear(), date.getMonth() + 1, 0);
-              return lastDate < options.minDate || date.getTime() > options.maxDate;
-            },
-            onKeyDown: function(evt) {
-              if (!picker.$date) {
-                return;
-              }
-              var actualMonth = picker.$date.getMonth();
-              var newDate = new Date(picker.$date);
 
-              if(evt.keyCode === 37) newDate.setMonth(actualMonth - 1);
-              else if(evt.keyCode === 38) newDate.setMonth(actualMonth - 4);
-              else if(evt.keyCode === 39) newDate.setMonth(actualMonth + 1);
-              else if(evt.keyCode === 40) newDate.setMonth(actualMonth + 4);
-
-              if (!this.isDisabled(newDate)) picker.select(newDate, true);
+            return false;
+          },
+          onKeyDown: function(evt) {
+            if (!picker.$date) {
+              return;
             }
-          }, {
-            name: 'year',
-            format: options.yearFormat,
-            split: 4,
-            steps: { year: 12 },
-            update: function(date, force) {
-              if(!this.built || force || parseInt(date.getFullYear()/20, 10) !== parseInt(viewDate.year/20, 10)) {
-                angular.extend(viewDate, {year: picker.$date.getFullYear(), month: picker.$date.getMonth(), date: picker.$date.getDate()});
-                picker.$build();
-              } else if(date.getFullYear() !== viewDate.year) {
-                angular.extend(viewDate, {year: picker.$date.getFullYear(), month: picker.$date.getMonth(), date: picker.$date.getDate()});
-                picker.$updateSelected();
-              }
-            },
-            build: function() {
-              var firstYear = viewDate.year - viewDate.year % (this.split * 3);
-              var years = [], year;
-              for (var i = 0; i < 12; i++) {
-                year = new Date(firstYear + i, 0, 1);
-                years.push({date: year, label: formatDate(year, this.format), selected: picker.$isSelected(year), disabled: this.isDisabled(year)});
-              }
-              scope.title = years[0].label + '-' + years[years.length - 1].label;
-              scope.showLabels = false;
-              scope.rows = split(years, this.split);
-              this.built = true;
-            },
-            isSelected: function(date) {
-              return picker.$date && date.getFullYear() === picker.$date.getFullYear();
-            },
-            isDisabled: function(date) {
-              var lastDate = +new Date(date.getFullYear() + 1, 0, 0);
-              return lastDate < options.minDate || date.getTime() > options.maxDate;
-            },
-            onKeyDown: function(evt) {
-              if (!picker.$date) {
-                return;
-              }
-              var actualYear = picker.$date.getFullYear(),
-                  newDate = new Date(picker.$date);
+            var actualTime = picker.$date.getTime();
+            var newDate;
 
-              if(evt.keyCode === 37) newDate.setYear(actualYear - 1);
-              else if(evt.keyCode === 38) newDate.setYear(actualYear - 4);
-              else if(evt.keyCode === 39) newDate.setYear(actualYear + 1);
-              else if(evt.keyCode === 40) newDate.setYear(actualYear + 4);
+            if(evt.keyCode === 37) newDate = new Date(actualTime - 1 * 864e5);
+            else if(evt.keyCode === 38) newDate = new Date(actualTime - 7 * 864e5);
+            else if(evt.keyCode === 39) newDate = new Date(actualTime + 1 * 864e5);
+            else if(evt.keyCode === 40) newDate = new Date(actualTime + 7 * 864e5);
 
-              if (!this.isDisabled(newDate)) picker.select(newDate, true);
+            if (!this.isDisabled(newDate)) picker.select(newDate, true);
+          }
+        }, {
+          name: 'month',
+          format: options.monthFormat,
+          split: 4,
+          steps: { year: 1 },
+          update: function(date, force) {
+            if(!this.built || date.getFullYear() !== viewDate.year) {
+              angular.extend(viewDate, {year: picker.$date.getFullYear(), month: picker.$date.getMonth(), date: picker.$date.getDate()});
+              picker.$build();
+            } else if(date.getMonth() !== viewDate.month) {
+              angular.extend(viewDate, {month: picker.$date.getMonth(), date: picker.$date.getDate()});
+              picker.$updateSelected();
             }
-          }];
+          },
+          build: function() {
+            var firstMonth = new Date(viewDate.year, 0, 1);
+            var months = [], month;
+            for (var i = 0; i < 12; i++) {
+              month = new Date(viewDate.year, i, 1);
+              months.push({date: month, label: formatDate(month, this.format), selected: picker.$isSelected(month), disabled: this.isDisabled(month)});
+            }
+            scope.title = formatDate(month, options.yearTitleFormat);
+            scope.showLabels = false;
+            scope.rows = split(months, this.split);
+            this.built = true;
+          },
+          isSelected: function(date) {
+            return picker.$date && date.getFullYear() === picker.$date.getFullYear() && date.getMonth() === picker.$date.getMonth();
+          },
+          isDisabled: function(date) {
+            var lastDate = +new Date(date.getFullYear(), date.getMonth() + 1, 0);
+            return lastDate < options.minDate || date.getTime() > options.maxDate;
+          },
+          onKeyDown: function(evt) {
+            if (!picker.$date) {
+              return;
+            }
+            var actualMonth = picker.$date.getMonth();
+            var newDate = new Date(picker.$date);
+
+            if(evt.keyCode === 37) newDate.setMonth(actualMonth - 1);
+            else if(evt.keyCode === 38) newDate.setMonth(actualMonth - 4);
+            else if(evt.keyCode === 39) newDate.setMonth(actualMonth + 1);
+            else if(evt.keyCode === 40) newDate.setMonth(actualMonth + 4);
+
+            if (!this.isDisabled(newDate)) picker.select(newDate, true);
+          }
+        }, {
+          name: 'year',
+          format: options.yearFormat,
+          split: 4,
+          steps: { year: 12 },
+          update: function(date, force) {
+            if(!this.built || force || parseInt(date.getFullYear()/20, 10) !== parseInt(viewDate.year/20, 10)) {
+              angular.extend(viewDate, {year: picker.$date.getFullYear(), month: picker.$date.getMonth(), date: picker.$date.getDate()});
+              picker.$build();
+            } else if(date.getFullYear() !== viewDate.year) {
+              angular.extend(viewDate, {year: picker.$date.getFullYear(), month: picker.$date.getMonth(), date: picker.$date.getDate()});
+              picker.$updateSelected();
+            }
+          },
+          build: function() {
+            var firstYear = viewDate.year - viewDate.year % (this.split * 3);
+            var years = [], year;
+            for (var i = 0; i < 12; i++) {
+              year = new Date(firstYear + i, 0, 1);
+              years.push({date: year, label: formatDate(year, this.format), selected: picker.$isSelected(year), disabled: this.isDisabled(year)});
+            }
+            scope.title = years[0].label + '-' + years[years.length - 1].label;
+            scope.showLabels = false;
+            scope.rows = split(years, this.split);
+            this.built = true;
+          },
+          isSelected: function(date) {
+            return picker.$date && date.getFullYear() === picker.$date.getFullYear();
+          },
+          isDisabled: function(date) {
+            var lastDate = +new Date(date.getFullYear() + 1, 0, 0);
+            return lastDate < options.minDate || date.getTime() > options.maxDate;
+          },
+          onKeyDown: function(evt) {
+            if (!picker.$date) {
+              return;
+            }
+            var actualYear = picker.$date.getFullYear(),
+              newDate = new Date(picker.$date);
+
+            if(evt.keyCode === 37) newDate.setYear(actualYear - 1);
+            else if(evt.keyCode === 38) newDate.setYear(actualYear - 4);
+            else if(evt.keyCode === 39) newDate.setYear(actualYear + 1);
+            else if(evt.keyCode === 40) newDate.setYear(actualYear + 4);
+
+            if (!this.isDisabled(newDate)) picker.select(newDate, true);
+          }
+        }];
 
         return {
           views: options.minView ? Array.prototype.slice.call(views, options.minView) : views,
